@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CryptoSafe · 密码安全服务平台</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🔐</span>
+      <span class="brand-name">CryptoSafe</span>
+      <span class="brand-sub">密码安全服务平台</span>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="symmetric">对称加密</button>
+      <button class="tab-btn" data-tab="asymmetric">非对称加密</button>
+      <button class="tab-btn" data-tab="sm">国密算法</button>
+      <button class="tab-btn" data-tab="signature">数字签名</button>
+      <button class="tab-btn" data-tab="keymgr">密钥管理</button>
+      <button class="tab-btn" data-tab="hash">哈希摘要</button>
+    </nav>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+
+    <!-- ===== 对称加密 (AES) ===== -->
+    <section id="tab-symmetric" class="tab-panel active">
+      <div class="panel-header">
+        <h2>对称加密 · AES</h2>
+        <p class="panel-desc">Advanced Encryption Standard，支持 AES-128 / AES-256，CBC / ECB / CTR 模式</p>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>加密</h3>
+          <div class="form-row">
+            <label>明文</label>
+            <textarea id="aes-plain" placeholder="输入需要加密的文本..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>密钥 (Base64 或 十六进制)</label>
+            <div class="input-with-btn">
+              <input id="aes-key" type="text" placeholder="留空则自动生成 AES-256 密钥" />
+              <button class="btn-ghost" onclick="aesGenKey()">生成密钥</button>
+            </div>
+          </div>
+          <div class="form-row inline">
+            <label>模式</label>
+            <select id="aes-mode">
+              <option value="CBC">CBC</option>
+              <option value="ECB">ECB</option>
+              <option value="CTR">CTR</option>
+            </select>
+            <label style="margin-left:16px">密钥长度</label>
+            <select id="aes-keylen">
+              <option value="256">AES-256</option>
+              <option value="128">AES-128</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>IV（CBC/CTR 模式，Base64）</label>
+            <div class="input-with-btn">
+              <input id="aes-iv" type="text" placeholder="留空则自动生成随机 IV" />
+              <button class="btn-ghost" onclick="aesGenIV()">生成 IV</button>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="aesEncrypt()">加密</button>
+          <div class="result-box" id="aes-cipher-result"></div>
+        </div>
+
+        <div class="card">
+          <h3>解密</h3>
+          <div class="form-row">
+            <label>密文 (Base64)</label>
+            <textarea id="aes-cipher" placeholder="输入 Base64 编码的密文..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>密钥</label>
+            <input id="aes-dec-key" type="text" placeholder="加密时使用的密钥" />
+          </div>
+          <div class="form-row inline">
+            <label>模式</label>
+            <select id="aes-dec-mode">
+              <option value="CBC">CBC</option>
+              <option value="ECB">ECB</option>
+              <option value="CTR">CTR</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>IV</label>
+            <input id="aes-dec-iv" type="text" placeholder="加密时使用的 IV（CBC/CTR）" />
+          </div>
+          <button class="btn-primary" onclick="aesDecrypt()">解密</button>
+          <div class="result-box" id="aes-plain-result"></div>
+        </div>
+
+        <div class="card algo-info">
+          <h3>📖 算法说明</h3>
+          <div class="algo-detail">
+            <p><strong>AES（高级加密标准）</strong>是目前最广泛使用的对称加密算法，由 NIST 于 2001 年正式发布，替代 DES。</p>
+            <ul>
+              <li><strong>密钥长度：</strong>128 / 192 / 256 位</li>
+              <li><strong>分组大小：</strong>128 位（固定）</li>
+              <li><strong>CBC 模式：</strong>链式分组，需要 IV，安全性高，常用于文件加密</li>
+              <li><strong>ECB 模式：</strong>独立分组加密，相同明文产生相同密文，不推荐用于敏感数据</li>
+              <li><strong>CTR 模式：</strong>计数器模式，可并行计算，适合流加密</li>
+            </ul>
+            <div class="tag-group">
+              <span class="tag green">分组密码</span>
+              <span class="tag blue">NIST 标准</span>
+              <span class="tag orange">密钥长度 128/256</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 非对称加密 (RSA) ===== -->
+    <section id="tab-asymmetric" class="tab-panel">
+      <div class="panel-header">
+        <h2>非对称加密 · RSA</h2>
+        <p class="panel-desc">Rivest–Shamir–Adleman，支持 RSA-2048，PKCS#1 v1.5 与 OAEP 填充</p>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>密钥对生成</h3>
+          <div class="form-row inline">
+            <label>密钥长度</label>
+            <select id="rsa-keylen">
+              <option value="2048">2048 位（推荐）</option>
+              <option value="1024">1024 位（仅演示）</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="rsaGenKey()">生成 RSA 密钥对</button>
+          <div class="form-row" style="margin-top:12px">
+            <label>公钥 (PEM)</label>
+            <textarea id="rsa-pubkey" rows="6" placeholder="公钥将显示在此处..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>私钥 (PEM)</label>
+            <textarea id="rsa-prikey" rows="8" placeholder="私钥将显示在此处..."></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>加密 / 解密</h3>
+          <div class="form-row">
+            <label>明文（加密）</label>
+            <textarea id="rsa-plain" placeholder="输入需要加密的文本（RSA 适合短数据）..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>公钥 (PEM)</label>
+            <textarea id="rsa-enc-pub" rows="4" placeholder="粘贴公钥..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="rsaEncrypt()">用公钥加密</button>
+          <div class="result-box" id="rsa-cipher-result"></div>
+
+          <div class="divider"></div>
+
+          <div class="form-row">
+            <label>密文 (Base64)</label>
+            <textarea id="rsa-cipher" placeholder="粘贴密文..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>私钥 (PEM)</label>
+            <textarea id="rsa-dec-pri" rows="4" placeholder="粘贴私钥..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="rsaDecrypt()">用私钥解密</button>
+          <div class="result-box" id="rsa-plain-result"></div>
+        </div>
+
+        <div class="card algo-info">
+          <h3>📖 算法说明</h3>
+          <div class="algo-detail">
+            <p><strong>RSA</strong>基于大整数分解难题，是最经典的非对称加密算法（1977年发布）。</p>
+            <ul>
+              <li><strong>公钥加密，私钥解密：</strong>适用于密钥交换和短数据加密</li>
+              <li><strong>私钥签名，公钥验签：</strong>用于数字签名（见签名模块）</li>
+              <li><strong>OAEP 填充：</strong>PKCS#1 v2.1，安全性更高，推荐使用</li>
+              <li><strong>密钥长度建议：</strong>≥2048 位，4096 位用于高安全场景</li>
+              <li><strong>注意：</strong>RSA 不适合加密大量数据，通常配合 AES 使用（混合加密）</li>
+            </ul>
+            <div class="tag-group">
+              <span class="tag green">公钥密码</span>
+              <span class="tag blue">大整数分解</span>
+              <span class="tag orange">混合加密</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 国密算法 ===== -->
+    <section id="tab-sm" class="tab-panel">
+      <div class="panel-header">
+        <h2>国密算法 · SM2 / SM4 / SM3</h2>
+        <p class="panel-desc">中国国家密码标准，SM2（非对称）/ SM4（对称）/ SM3（哈希），符合 GM/T 系列标准</p>
+      </div>
+      <div class="card-grid">
+
+        <div class="card">
+          <h3>SM4 对称加密</h3>
+          <div class="form-row">
+            <label>明文</label>
+            <textarea id="sm4-plain" placeholder="输入需要加密的文本..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>密钥 (128位，32位十六进制)</label>
+            <div class="input-with-btn">
+              <input id="sm4-key" type="text" placeholder="留空则自动生成" />
+              <button class="btn-ghost" onclick="sm4GenKey()">生成密钥</button>
+            </div>
+          </div>
+          <div class="form-row inline">
+            <label>模式</label>
+            <select id="sm4-mode">
+              <option value="CBC">CBC</option>
+              <option value="ECB">ECB</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>IV（CBC 模式）</label>
+            <div class="input-with-btn">
+              <input id="sm4-iv" type="text" placeholder="留空则自动生成" />
+              <button class="btn-ghost" onclick="sm4GenIV()">生成 IV</button>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="sm4Encrypt()">SM4 加密</button>
+            <button class="btn-secondary" onclick="sm4Decrypt()">SM4 解密</button>
+          </div>
+          <div class="result-box" id="sm4-result"></div>
+        </div>
+
+        <div class="card">
+          <h3>SM2 密钥对生成与加密</h3>
+          <button class="btn-primary" onclick="sm2GenKey()">生成 SM2 密钥对</button>
+          <div class="form-row" style="margin-top:12px">
+            <label>公钥 (Hex)</label>
+            <input id="sm2-pubkey" type="text" placeholder="SM2 公钥将显示在此处..." />
+          </div>
+          <div class="form-row">
+            <label>私钥 (Hex)</label>
+            <input id="sm2-prikey" type="text" placeholder="SM2 私钥将显示在此处..." />
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="form-row">
+            <label>明文（SM2 加密）</label>
+            <textarea id="sm2-plain" placeholder="输入文本（SM2 适合短数据）..."></textarea>
+          </div>
+          <div class="btn-group">
+            <button class="btn-primary" onclick="sm2Encrypt()">SM2 加密</button>
+            <button class="btn-secondary" onclick="sm2Decrypt()">SM2 解密</button>
+          </div>
+          <div class="result-box" id="sm2-result"></div>
+        </div>
+
+        <div class="card">
+          <h3>SM3 哈希摘要</h3>
+          <div class="form-row">
+            <label>输入数据</label>
+            <textarea id="sm3-input" placeholder="输入需要计算哈希的数据..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="sm3Hash()">计算 SM3 哈希</button>
+          <div class="result-box" id="sm3-result"></div>
+
+          <div class="algo-detail" style="margin-top:16px">
+            <p><strong>SM3</strong>输出 256 位哈希值，设计参数与 SHA-256 类似，但使用独立的压缩函数。广泛用于国密体系中的数字签名和完整性校验。</p>
+          </div>
+        </div>
+
+        <div class="card algo-info">
+          <h3>📖 国密算法体系</h3>
+          <div class="algo-detail">
+            <p>中国国家密码局发布的商用密码算法标准（GM/T）：</p>
+            <ul>
+              <li><strong>SM1：</strong>对称算法，硬件实现，不公开算法细节</li>
+              <li><strong>SM2：</strong>基于 ECC（椭圆曲线），256位，公钥加密+数字签名</li>
+              <li><strong>SM3：</strong>哈希算法，256位输出，类似 SHA-256</li>
+              <li><strong>SM4：</strong>对称分组密码，128位密钥/分组，类似 AES</li>
+              <li><strong>SM9：</strong>基于身份的密码算法（IBE），无证书体系</li>
+            </ul>
+            <p style="margin-top:8px">国密算法已纳入 ISO/IEC 国际标准，在金融、政务等领域强制使用。</p>
+            <div class="tag-group">
+              <span class="tag green">GM/T 标准</span>
+              <span class="tag blue">ISO/IEC</span>
+              <span class="tag red">金融/政务合规</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 数字签名 ===== -->
+    <section id="tab-signature" class="tab-panel">
+      <div class="panel-header">
+        <h2>数字签名 · RSA-SHA256 / SM2</h2>
+        <p class="panel-desc">提供消息完整性验证与身份认证，支持 RSA-SHA256 和 SM2 签名</p>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>RSA 签名与验签</h3>
+          <div class="form-row">
+            <label>消息内容</label>
+            <textarea id="sig-msg" placeholder="输入需要签名的消息..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>私钥 (PEM) — 用于签名</label>
+            <textarea id="sig-prikey" rows="5" placeholder="粘贴 RSA 私钥..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="rsaSign()">RSA-SHA256 签名</button>
+          <div class="result-box" id="sig-result"></div>
+
+          <div class="divider"></div>
+
+          <div class="form-row">
+            <label>签名 (Base64)</label>
+            <textarea id="verify-sig" placeholder="粘贴签名值..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>公钥 (PEM) — 用于验签</label>
+            <textarea id="verify-pubkey" rows="5" placeholder="粘贴 RSA 公钥..."></textarea>
+          </div>
+          <button class="btn-primary" onclick="rsaVerify()">验证签名</button>
+          <div class="result-box" id="verify-result"></div>
+        </div>
+
+        <div class="card">
+          <h3>SM2 数字签名</h3>
+          <div class="form-row">
+            <label>消息内容</label>
+            <textarea id="sm2-sig-msg" placeholder="输入需要签名的消息..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>私钥 (Hex)</label>
+            <input id="sm2-sig-prikey" type="text" placeholder="SM2 私钥..." />
+          </div>
+          <div class="form-row">
+            <label>公钥 (Hex)</label>
+            <input id="sm2-sig-pubkey" type="text" placeholder="SM2 公钥..." />
+          </div>
+          <button class="btn-ghost" onclick="sm2SigGenKey()">生成新密钥对</button>
+          <div class="btn-group" style="margin-top:8px">
+            <button class="btn-primary" onclick="sm2Sign()">SM2 签名</button>
+            <button class="btn-secondary" onclick="sm2Verify()">SM2 验签</button>
+          </div>
+          <div class="result-box" id="sm2-sig-result"></div>
+        </div>
+
+        <div class="card algo-info">
+          <h3>📖 数字签名原理</h3>
+          <div class="algo-detail">
+            <p>数字签名实现了<strong>不可否认性</strong>和<strong>完整性验证</strong>：</p>
+            <ul>
+              <li><strong>签名过程：</strong>用私钥对消息哈希值签名</li>
+              <li><strong>验签过程：</strong>用公钥解密签名，比对哈希值</li>
+              <li><strong>RSA-SHA256：</strong>先对消息求 SHA-256 哈希，再用 RSA 私钥签名</li>
+              <li><strong>SM2 签名：</strong>使用 ECDSA 变体，基于 SM2 椭圆曲线和 SM3 哈希</li>
+              <li><strong>应用场景：</strong>SSL/TLS 证书、代码签名、电子合同、区块链</li>
+            </ul>
+            <div class="tag-group">
+              <span class="tag green">身份认证</span>
+              <span class="tag blue">不可否认</span>
+              <span class="tag orange">完整性</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 密钥管理 ===== -->
+    <section id="tab-keymgr" class="tab-panel">
+      <div class="panel-header">
+        <h2>密钥管理系统 · KMS</h2>
+        <p class="panel-desc">密钥生命周期管理：生成、存储、导入导出、状态管理与审计日志</p>
+      </div>
+      <div class="kms-layout">
+        <div class="kms-sidebar">
+          <div class="kms-actions">
+            <button class="btn-primary full-width" onclick="kmsCreateKey()">+ 新建密钥</button>
+          </div>
+          <div class="kms-filter">
+            <select id="kms-filter-type" onchange="kmsRender()">
+              <option value="all">全部类型</option>
+              <option value="AES">AES</option>
+              <option value="RSA">RSA</option>
+              <option value="SM2">SM2</option>
+              <option value="SM4">SM4</option>
+            </select>
+            <select id="kms-filter-status" onchange="kmsRender()">
+              <option value="all">全部状态</option>
+              <option value="active">活跃</option>
+              <option value="disabled">禁用</option>
+              <option value="expired">已过期</option>
+            </select>
+          </div>
+          <div class="kms-stats" id="kms-stats"></div>
+        </div>
+        <div class="kms-main">
+          <div class="kms-table-header">
+            <span>密钥 ID</span><span>名称</span><span>类型</span>
+            <span>创建时间</span><span>状态</span><span>操作</span>
+          </div>
+          <div id="kms-key-list"></div>
+        </div>
+      </div>
+
+      <!-- 新建密钥弹窗 -->
+      <div id="kms-modal" class="modal hidden">
+        <div class="modal-box">
+          <h3>新建密钥</h3>
+          <div class="form-row">
+            <label>密钥名称</label>
+            <input id="kms-new-name" type="text" placeholder="例：业务加密主密钥" />
+          </div>
+          <div class="form-row inline">
+            <label>算法类型</label>
+            <select id="kms-new-type">
+              <option value="AES-256">AES-256</option>
+              <option value="AES-128">AES-128</option>
+              <option value="RSA-2048">RSA-2048</option>
+              <option value="SM2">SM2</option>
+              <option value="SM4">SM4</option>
+            </select>
+          </div>
+          <div class="form-row inline">
+            <label>用途</label>
+            <select id="kms-new-usage">
+              <option value="ENCRYPT_DECRYPT">加解密</option>
+              <option value="SIGN_VERIFY">签名验签</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>描述</label>
+            <input id="kms-new-desc" type="text" placeholder="密钥用途描述..." />
+          </div>
+          <div class="modal-actions">
+            <button class="btn-primary" onclick="kmsDoCreate()">创建</button>
+            <button class="btn-ghost" onclick="kmsCloseModal()">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 密钥详情弹窗 -->
+      <div id="kms-detail-modal" class="modal hidden">
+        <div class="modal-box wide">
+          <h3>密钥详情</h3>
+          <div id="kms-detail-content"></div>
+          <div class="modal-actions">
+            <button class="btn-ghost" onclick="kmsCloseDetail()">关闭</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 哈希摘要 ===== -->
+    <section id="tab-hash" class="tab-panel">
+      <div class="panel-header">
+        <h2>哈希摘要 · SHA / MD5 / SM3</h2>
+        <p class="panel-desc">消息摘要算法：SHA-256、SHA-512、MD5、SM3，以及 HMAC 消息认证码</p>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <h3>哈希计算</h3>
+          <div class="form-row">
+            <label>输入数据</label>
+            <textarea id="hash-input" placeholder="输入需要计算哈希的文本..." rows="4"></textarea>
+          </div>
+          <div class="form-row">
+            <label>文件哈希</label>
+            <input type="file" id="hash-file" onchange="hashFile()" />
+          </div>
+          <div class="hash-results">
+            <div class="hash-row">
+              <span class="hash-label">MD5</span>
+              <code id="hash-md5">—</code>
+              <button class="btn-copy" onclick="copyHash('hash-md5')">复制</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-label">SHA-1</span>
+              <code id="hash-sha1">—</code>
+              <button class="btn-copy" onclick="copyHash('hash-sha1')">复制</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-label">SHA-256</span>
+              <code id="hash-sha256">—</code>
+              <button class="btn-copy" onclick="copyHash('hash-sha256')">复制</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-label">SHA-512</span>
+              <code id="hash-sha512">—</code>
+              <button class="btn-copy" onclick="copyHash('hash-sha512')">复制</button>
+            </div>
+            <div class="hash-row">
+              <span class="hash-label">SM3</span>
+              <code id="hash-sm3">—</code>
+              <button class="btn-copy" onclick="copyHash('hash-sm3')">复制</button>
+            </div>
+          </div>
+          <button class="btn-primary" style="margin-top:12px" onclick="computeAllHash()">计算全部哈希</button>
+        </div>
+
+        <div class="card">
+          <h3>HMAC 消息认证码</h3>
+          <div class="form-row">
+            <label>消息</label>
+            <textarea id="hmac-msg" placeholder="输入消息..."></textarea>
+          </div>
+          <div class="form-row">
+            <label>密钥</label>
+            <div class="input-with-btn">
+              <input id="hmac-key" type="text" placeholder="HMAC 密钥..." />
+              <button class="btn-ghost" onclick="hmacGenKey()">随机密钥</button>
+            </div>
+          </div>
+          <div class="form-row inline">
+            <label>算法</label>
+            <select id="hmac-algo">
+              <option value="SHA-256">HMAC-SHA256</option>
+              <option value="SHA-512">HMAC-SHA512</option>
+              <option value="SHA-1">HMAC-SHA1</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="computeHMAC()">计算 HMAC</button>
+          <div class="result-box" id="hmac-result"></div>
+
+          <div class="algo-detail" style="margin-top:16px">
+            <p><strong>HMAC</strong>（Hash-based Message Authentication Code）在哈希函数中引入密钥，提供消息完整性和来源认证，防止篡改。</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>哈希碰撞演示</h3>
+          <p style="color:#888;font-size:13px">演示为何不应使用 MD5 保存密码——相同哈希长度，不同安全级别</p>
+          <div class="form-row">
+            <label>输入一段文本</label>
+            <input id="collision-input" type="text" placeholder="例：hello" oninput="showHashComparison()" />
+          </div>
+          <div id="collision-table" class="collision-table"></div>
+          <div class="algo-detail" style="margin-top:12px">
+            <p>💡 MD5 已被证明不安全（2004年王小云教授发现碰撞攻击），SHA-1 亦于 2017 年被 Google 攻破（SHAttered 攻击）。密码存储应使用 bcrypt / Argon2。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 状态提示 Toast -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 加载外部密码学库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sm-crypto@0.3.13/dist/sm-crypto.min.js"></script>
+  <script src="crypto.js"></script>
+  <script src="keymgr.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+feat: init CryptoSafe crypto security platform
+
+- AES-128/256 symmetric encryption (CBC/ECB/CTR)
+- RSA-2048 asymmetric encryption (OAEP)
+- Chinese national crypto: SM2/SM4/SM3 (GM/T standard)
+- Digital signature: RSA-SHA256 and SM2-SM3
+- Key Management System (KMS): lifecycle, audit log
+- Hash comparison: MD5/SHA-256/SHA-512/SM3/HMAC
