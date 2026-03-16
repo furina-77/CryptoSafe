@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: cryptosafe-postgres
+    environment:
+      POSTGRES_USER: cryptosafe
+      POSTGRES_PASSWORD: cryptosafe_password
+      POSTGRES_DB: cryptosafe
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cryptosafe -d cryptosafe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # CryptoSafe API
+  api:
+    build: .
+    container_name: cryptosafe-api
+    environment:
+      - DATABASE_URL=postgresql://cryptosafe:cryptosafe_password@postgres:5432/cryptosafe
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-change-this
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./keys:/app/keys
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: cryptosafe-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
