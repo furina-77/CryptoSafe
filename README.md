@@ -1,63 +1,126 @@
-# CryptoSafe 密码安全服务平台（Python 后端版本）
+# CryptoSafe 密码安全服务平台
 
-## 项目介绍
+> 一个完整的密码技术工程化落地项目，包含前端演示平台和 Python 后端 API 服务，支持国际标准（AES/RSA/SHA）和国密算法（SM2/SM3/SM4）。
 
-基于 Flask + cryptography 库实现的密码算法工程化后端服务，提供 AES、RSA、SM2、SM4 等密码算法的 API 接口，并包含完整的密钥管理系统（KMS）。
+---
 
-## 技术栈
+## 项目架构
 
-- **Web 框架**: Flask 3.0
-- **密码库**:
-  - `cryptography`: 实现 AES、RSA、SHA
-  - `gmssl`: 实现国密 SM2、SM3、SM4
-- **环境管理**: python-dotenv
-- **部署**: gunicorn
+CryptoSafe 采用前后端分离架构：
+
+| 组件 | 技术栈 | 说明 |
+|------|--------|------|
+| **前端** | HTML/CSS/JS + CryptoJS | 浏览器端密码算法演示 |
+| **后端** | Flask + cryptography | RESTful API 服务 |
+| **数据库** | SQLite / PostgreSQL | 密钥存储（可选） |
+| **部署** | Docker + Gunicorn + Nginx | 生产环境容器化部署 |
+
+---
+
+## 📁 项目目录
+
+```
+CryptoSafe/
+├── frontend/              # 前端项目（浏览器端演示）
+│   ├── index.html         # 主页面
+│   ├── crypto.js          # 密码算法实现
+│   ├── keymgr.js          # 密钥管理系统
+│   ├── api-client.js      # 后端 API 客户端
+│   └── style.css          # 样式文件
+├── backend/               # 后端项目（Flask API）
+│   ├── app.py             # Flask 应用主入口
+│   ├── requirements.txt   # Python 依赖
+│   ├── routes/            # API 路由
+│   ├── services/          # 业务逻辑
+│   ├── models/            # 数据模型（KMS）
+│   ├── database/          # 数据库脚本
+│   ├── docker/            # Docker 配置
+│   └── nginx/             # Nginx 配置
+└── README.md              # 本文件
+```
+
+---
 
 ## 功能模块
 
 ### 1. 对称加密
-- AES-128/192/256 (CBC/ECB/CTR 模式)
-- SM4 (国密对称算法)
+
+| 算法 | 前端实现 | 后端实现 | 用途 |
+|------|----------|----------|------|
+| AES-128/256 | ✅ CryptoJS | ✅ cryptography | 数据加密 |
+| SM4 | ✅ sm-crypto | ✅ gmssl | 国密对称加密 |
 
 ### 2. 非对称加密
-- RSA-2048 (OAEP 填充)
-- SM2 (国密非对称算法)
+
+| 算法 | 前端实现 | 后端实现 | 用途 |
+|------|----------|----------|------|
+| RSA-2048 | ✅ node-forge | ✅ cryptography | 密钥交换、签名 |
+| SM2 | ✅ sm-crypto | ✅ gmssl | 国密非对称 |
 
 ### 3. 数字签名
-- RSA-PSS 签名
-- SM2-SM3 签名
+
+| 算法 | 前端实现 | 后端实现 | 用途 |
+|------|----------|----------|------|
+| RSA-PSS | ✅ node-forge | ✅ cryptography | 代码签名、TLS |
+| SM2-SM3 | ✅ sm-crypto | ✅ gmssl | 国密签名 |
 
 ### 4. 哈希摘要
-- MD5、SHA-256、SHA-512
-- SM3 (国密哈希)
-- HMAC-SHA256/512
+
+| 算法 | 前端实现 | 后端实现 | 用途 |
+|------|----------|----------|------|
+| SHA-256/512 | ✅ CryptoJS | ✅ cryptography | 数据完整性 |
+| SM3 | ✅ sm-crypto | ✅ gmssl | 国密哈希 |
+| HMAC | ✅ CryptoJS | ✅ cryptography | 消息认证 |
 
 ### 5. 密钥管理系统（KMS）
-- 密钥生成与存储
-- 密钥生命周期管理（启用/禁用/删除）
-- 密钥轮换
+
+**前端特性：**
+- 密钥生成与存储（localStorage）
+- 密钥状态管理（启用/禁用/删除）
 - 操作审计日志
+
+**后端特性：**
+- 密钥生命周期管理（符合 NIST SP 800-57）
+- 密钥轮换机制
+- 数据库持久化（PostgreSQL）
+- RESTful API 接口
+
+---
 
 ## 快速开始
 
-### 1. 安装依赖
+### 前端运行
 
 ```bash
-cd E:\crypto
-E:\Anaconda\python.exe -m pip install -r requirements.txt
+# 直接用浏览器打开 index.html
+# 或使用本地服务器
+python -m http.server 8000
+# 访问 http://localhost:8000/index.html
 ```
 
-### 2. 启动服务
+### 后端运行
 
 ```bash
-E:\Anaconda\python.exe app.py
+# 安装依赖
+pip install -r backend/requirements.txt
+
+# 启动服务（开发模式）
+python backend/app.py
+
+# 访问 http://localhost:5000
 ```
 
-服务将在 `http://localhost:5000` 启动
+### Docker 部署
 
-### 3. 测试 API
+```bash
+# 使用 docker-compose 部署
+cd backend
+docker-compose up -d
 
-访问 http://localhost:5000 查看可用接口
+# 访问 http://localhost
+```
+
+---
 
 ## API 接口文档
 
@@ -76,19 +139,6 @@ Content-Type: application/json
 }
 ```
 
-#### AES 解密
-```bash
-POST /api/crypto/aes/decrypt
-Content-Type: application/json
-
-{
-  "ciphertext": "base64编码的密文",
-  "key": "base64编码的密钥",
-  "mode": "CBC",
-  "iv": "base64编码的IV"
-}
-```
-
 #### RSA 加密
 ```bash
 POST /api/crypto/rsa/encrypt
@@ -97,17 +147,6 @@ Content-Type: application/json
 {
   "plaintext": "Hello, World!",
   "public_key": "PEM格式的公钥"
-}
-```
-
-#### SM2 加密
-```bash
-POST /api/crypto/sm2/encrypt
-Content-Type: application/json
-
-{
-  "plaintext": "Hello, World!",
-  "public_key": "SM2公钥(hex)"
 }
 ```
 
@@ -133,21 +172,6 @@ Content-Type: application/json
 GET /api/keys/?status=active&algorithm=AES-256
 ```
 
-#### 获取密钥元数据
-```bash
-GET /api/keys/{key_id}
-```
-
-#### 获取密钥材料
-```bash
-GET /api/keys/{key_id}/material
-```
-
-#### 禁用密钥
-```bash
-POST /api/keys/{key_id}/disable
-```
-
 #### 密钥轮换
 ```bash
 POST /api/keys/{key_id}/rotate
@@ -171,17 +195,6 @@ Content-Type: application/json
 }
 ```
 
-#### SM2 签名
-```bash
-POST /api/sign/sm2/sign
-Content-Type: application/json
-
-{
-  "message": "待签名消息",
-  "private_key": "SM2私钥(hex)"
-}
-```
-
 ### 哈希摘要 (`/api/hash`)
 
 #### 计算哈希
@@ -195,105 +208,141 @@ Content-Type: application/json
 }
 ```
 
-#### 计算 HMAC
-```bash
-POST /api/hash/hmac
-Content-Type: application/json
-
-{
-  "message": "Hello, World!",
-  "key": "base64编码的密钥",
-  "algorithm": "SHA256"
-}
-```
-
-## 项目结构
-
-```
-E:\crypto/
-├── app.py                 # Flask 应用主入口
-├── requirements.txt       # Python 依赖
-├── .env                   # 环境变量配置
-├── routes/               # API 路由
-│   ├── crypto_routes.py  # 加密/解密
-│   ├── key_routes.py     # 密钥管理
-│   ├── sign_routes.py    # 数字签名
-│   └── hash_routes.py    # 哈希摘要
-├── services/             # 业务逻辑
-│   ├── crypto_service.py # 密码算法实现
-│   └── hash_service.py  # 哈希服务
-├── models/               # 数据模型
-│   └── key_manager.py    # 密钥管理模型（KMS）
-├── keys/                 # 密钥存储目录（自动创建）
-└── tests/                # 单元测试
-```
-
-## 密钥管理（KMS）特性
-
-1. **密钥生命周期管理**
-   - 创建、启用、禁用、删除
-   - 自动过期时间设置
-   - 密钥轮换机制
-
-2. **安全存储**
-   - 密钥材料加密存储
-   - 支持标签和描述
-   - 软删除机制
-
-3. **审计日志**
-   - 记录所有密钥操作
-   - 可追溯操作历史
-   - 支持按密钥 ID 筛选
+---
 
 ## 技术亮点
 
-1. **符合密码工程标准**
-   - AES/CBC/CTR 使用 PKCS7 填充
-   - RSA 使用 OAEP 和 PSS 填充
-   - SM2/SM4 符合 GM/T 国密标准
+### 密码工程标准
+- AES 使用 PKCS7 填充
+- RSA 使用 OAEP 和 PSS 填充
+- SM2/SM4 符合 GM/T 国密标准
+- KMS 遵循 NIST SP 800-57 规范
 
-2. **安全性设计**
-   - 使用 `hmac.compare_digest()` 防止时序攻击
-   - 密钥轮换机制
-   - 完整的审计日志
+### 安全性设计
+- 前端使用 `SubtleCrypto` 或 WebCrypto API（浏览器支持）
+- 后端使用 `hmac.compare_digest()` 防止时序攻击
+- 密钥轮换机制（默认 90 天）
+- 完整的审计日志
 
-3. **生产级架构**
-   - 模块化设计
-   - RESTful API
-   - 支持横向扩展
+### 架构设计
+- 前后端分离
+- RESTful API 规范
+- 模块化设计
+- 支持容器化部署
+
+---
 
 ## 部署建议
 
 ### 开发环境
 ```bash
-E:\Anaconda\python.exe app.py
+# 前端
+python -m http.server 8000
+
+# 后端
+python backend/app.py
 ```
 
 ### 生产环境
-使用 gunicorn 部署：
+
+#### 方式一：Gunicorn
 ```bash
-E:\Anaconda\Scripts\gunicorn -w 4 -b 0.0.0.0:5000 app:app
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
+
+#### 方式二：Docker
+```bash
+docker build -t cryptosafe-backend .
+docker run -p 5000:5000 cryptosafe-backend
+```
+
+#### 方式三：Docker Compose（推荐）
+```bash
+docker-compose up -d
+```
+
+---
+
+## 环境变量配置
+
+创建 `.env` 文件：
+
+```env
+# Flask 配置
+FLASK_ENV=production
+FLASK_DEBUG=0
+SECRET_KEY=your-secret-key-here
+
+# 数据库配置（可选）
+DATABASE_URL=postgresql://user:password@localhost:5432/cryptosafe
+
+# 密钥存储配置
+KEY_STORAGE_PATH=./keys
+KEY_ROTATION_DAYS=90
+```
+
+---
 
 ## 测试
 
-运行单元测试：
+### 前端测试
+直接在浏览器中打开 index.html，测试各项功能。
+
+### 后端测试
 ```bash
-E:\Anaconda\python.exe -m pytest tests/
+# 运行单元测试
+python backend/run_tests.py
+
+# API 测试
+python backend/tests/test_crypto_api.py
 ```
+
+---
+
+## 安全说明
+
+⚠️ **重要提醒：**
+
+- 本项目为演示用途，生产环境应使用 HSM（硬件安全模块）
+- 前端私钥存储在 localStorage，仅适合演示
+- 后端密钥应存储在专用密钥管理服务（如 AWS KMS、HashiCorp Vault）
+- 所有密码操作在服务端执行，不上传任何敏感数据
+
+---
+
+## 面试要点
+
+1. **密码算法实现**
+   - 详细讲解 AES/RSA/SM2/SM4 的工程实现细节
+   - 区分浏览器端和服务端的不同实现方式
+
+2. **密钥管理**
+   - 阐述 KMS 的设计理念
+   - NIST SP 800-57 标准遵循情况
+
+3. **安全性**
+   - 强调安全编码实践（防时序攻击、密钥轮换、审计日志）
+   - 前后端分离的安全考虑
+
+4. **架构设计**
+   - RESTful API 设计原则
+   - 模块化架构和可扩展性
+
+---
 
 ## 许可证
 
 MIT License
 
-## 面试要点
+---
 
-1. **密码算法实现**: 详细讲解 AES/RSA/SM2/SM4 的工程实现细节
-2. **密钥管理**: 阐述 KMS 的设计理念和 NIST SP 800-57 标准遵循情况
-3. **安全性**: 强调安全编码实践（防时序攻击、密钥轮换、审计日志）
-4. **架构设计**: 说明 RESTful API 设计原则和模块化架构
+## 作者
+
+CryptoSafe Team · 2026
 
 ---
 
-作者: [你的名字]
-日期: 2026
+## 项目链接
+
+- 前端演示：https://github.com/furina-77/CryptoSafe
+- 后端 API：https://github.com/furina-77/CryptoSafe/tree/main/backend
